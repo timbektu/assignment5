@@ -5,8 +5,10 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 from models import cls_model, seg_model
+from dgcnn_model import DGCNN
 from data_loader import get_data_loader
 from utils import save_checkpoint, create_dir
+import pdb
 
 def train(train_dataloader, model, opt, epoch, args, writer):
     
@@ -20,7 +22,11 @@ def train(train_dataloader, model, opt, epoch, args, writer):
         labels = labels.to(args.device).to(torch.long)
 
         # ------ TO DO: Forward Pass ------
-        predictions = 
+        # output = model(point_clouds) #TODO: check dims?
+        
+        # pred_probs, predictions = output
+        predictions = model(point_clouds)
+        # pdb.set_trace()
 
         if (args.task == "seg"):
             labels = labels.reshape([-1])
@@ -34,6 +40,8 @@ def train(train_dataloader, model, opt, epoch, args, writer):
         # Backward and Optimize
         opt.zero_grad()
         loss.backward()
+        # print("blah")
+        # pdb.set_trace()
         opt.step()
 
         writer.add_scalar('train_loss', loss.item(), step+i)
@@ -55,7 +63,11 @@ def test(test_dataloader, model, epoch, args, writer):
 
             # ------ TO DO: Make Predictions ------
             with torch.no_grad():
-                pred_labels = 
+                # pdb.set_trace()
+                predictions = model(point_clouds)
+                pred_labels = torch.argmax(predictions, dim=-1, keepdim=False)
+                # pdb.set_trace()
+                # pred_labels = pred_labels.T
             correct_obj += pred_labels.eq(labels.data).cpu().sum().item()
             num_obj += labels.size()[0]
 
@@ -74,7 +86,8 @@ def test(test_dataloader, model, epoch, args, writer):
 
             # ------ TO DO: Make Predictions ------
             with torch.no_grad():     
-                pred_labels = 
+                predictions = model(point_clouds) #TODO: check dims? done wrt cls do it for seg
+                pred_labels = torch.argmax(predictions, dim=-1, keepdim=False)
 
             correct_point += pred_labels.eq(labels.data).cpu().sum().item()
             num_point += labels.view([-1,1]).size()[0]
@@ -99,9 +112,14 @@ def main(args):
 
     # ------ TO DO: Initialize Model ------
     if args.task == "cls":
-        model = 
+        model = cls_model().to(args.device)
+    elif args.task =="cls_dgcnn":
+        print("Using DGCNN")
+        model = DGCNN().to(args.device)
+    elif args.task =="seg":
+        model = seg_model().to(args.device)
     else:
-        model = 
+        assert 1==2
     
     # Load Checkpoint 
     if args.load_checkpoint:
@@ -112,6 +130,7 @@ def main(args):
         print ("successfully loaded checkpoint from {}".format(model_path))
 
     # Optimizer
+    # pdb.set_trace()
     opt = optim.Adam(model.parameters(), args.lr, betas=(0.9, 0.999))
 
     # Dataloader for Training & Testing
@@ -155,14 +174,15 @@ def create_parser():
     parser = argparse.ArgumentParser()
 
     # Model & Data hyper-parameters
-    parser.add_argument('--task', type=str, default="cls", help='The task: cls or seg')
+    parser.add_argument('--task', type=str, default="dgcnn", help='The task: cls or seg')
     parser.add_argument('--num_seg_class', type=int, default=6, help='The number of segmentation classes')
 
     # Training hyper-parameters
-    parser.add_argument('--num_epochs', type=int, default=250)
-    parser.add_argument('--batch_size', type=int, default=32, help='The number of images in a batch.')
-    parser.add_argument('--num_workers', type=int, default=0, help='The number of threads to use for the DataLoader.')
-    parser.add_argument('--lr', type=float, default=0.001, help='The learning rate (default 0.001)')
+    parser.add_argument('--num_epochs', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=8, help='The number of images in a batch.')
+    parser.add_argument('--num_workers', type=int, default=8, help='The number of threads to use for the DataLoader.')
+    # parser.add_argument('--lr', type=float, default=0.001, help='The learning rate (default 0.001)')
+    parser.add_argument('--lr', type=float, default=1e-5, help='The learning rate (default 0.001)')
 
     parser.add_argument('--exp_name', type=str, default="exp", help='The name of the experiment')
 

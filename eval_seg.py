@@ -5,7 +5,9 @@ import torch
 from models import seg_model
 from data_loader import get_data_loader
 from utils import create_dir, viz_seg
+from tqdm import tqdm
 
+import pdb
 
 def create_parser():
     """Creates a parser for command-line arguments.
@@ -36,7 +38,7 @@ if __name__ == '__main__':
     create_dir(args.output_dir)
 
     # ------ TO DO: Initialize Model for Segmentation Task  ------
-    model = 
+    model = seg_model().to(args.device)
     
     # Load Model Checkpoint
     model_path = './checkpoints/seg/{}.pt'.format(args.load_checkpoint)
@@ -53,8 +55,19 @@ if __name__ == '__main__':
     test_label = torch.from_numpy((np.load(args.test_label))[:,ind])
 
     # ------ TO DO: Make Prediction ------
-    pred_label = 
+    batch_size = 32
+    num_batch = (test_data.shape[0] // batch_size)+1
+    pred_label = torch.zeros_like(test_label)
 
+    for i in tqdm(range(num_batch)):
+        # pdb.set_trace()
+        pred = model(test_data[i*batch_size: (i+1)*batch_size].to(args.device))
+        curr_pred_label = torch.argmax(pred, -1, keepdim=False).cpu()
+        # curr_pred_label = list(curr_pred_label)
+        # pred_label.extend(curr_pred_label)
+        pred_label[i*batch_size: (i+1)*batch_size, :] = curr_pred_label
+
+    pred_label = torch.Tensor(pred_label).cpu()
     test_accuracy = pred_label.eq(test_label.data).cpu().sum().item() / (test_label.reshape((-1,1)).size()[0])
     print ("test accuracy: {}".format(test_accuracy))
 

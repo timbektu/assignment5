@@ -4,6 +4,8 @@ import argparse
 import torch
 from models import cls_model
 from utils import create_dir
+import pdb
+from tqdm import tqdm
 
 def create_parser():
     """Creates a parser for command-line arguments.
@@ -34,7 +36,7 @@ if __name__ == '__main__':
     create_dir(args.output_dir)
 
     # ------ TO DO: Initialize Model for Classification Task ------
-    model = 
+    model = cls_model().to(args.device)
     
     # Load Model Checkpoint
     model_path = './checkpoints/cls/{}.pt'.format(args.load_checkpoint)
@@ -47,13 +49,23 @@ if __name__ == '__main__':
 
     # Sample Points per Object
     ind = np.random.choice(10000,args.num_points, replace=False)
-    test_data = torch.from_numpy((np.load(args.test_data))[:,ind,:])
+    test_data = torch.from_numpy((np.load(args.test_data))[:,ind,:]).to(args.device)
     test_label = torch.from_numpy(np.load(args.test_label))
 
     # ------ TO DO: Make Prediction ------
-    pred_label = 
+    batch_size = 32
+    num_batch = (test_data.shape[0] // batch_size)+1
+    pred_label = []
+
+    for i in tqdm(range(num_batch)):
+        pred = model(test_data[i*batch_size: (i+1)*batch_size].to(args.device))
+        curr_pred_label = torch.argmax(pred, -1, keepdim=False).cpu()
+        curr_pred_label = list(curr_pred_label)
+        pred_label.extend(curr_pred_label)
+    # pdb.set_trace()
 
     # Compute Accuracy
+    pred_label = torch.Tensor(pred_label).cpu()
     test_accuracy = pred_label.eq(test_label.data).cpu().sum().item() / (test_label.size()[0])
     print ("test accuracy: {}".format(test_accuracy))
 
