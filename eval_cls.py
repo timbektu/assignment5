@@ -3,7 +3,7 @@ import argparse
 
 import torch
 from models import cls_model
-from utils import create_dir
+from utils import create_dir, viz_seg
 import pdb
 from tqdm import tqdm
 
@@ -68,4 +68,11 @@ if __name__ == '__main__':
     pred_label = torch.Tensor(pred_label).cpu()
     test_accuracy = pred_label.eq(test_label.data).cpu().sum().item() / (test_label.size()[0])
     print ("test accuracy: {}".format(test_accuracy))
+
+    # Visualize Segmentation Result (Pred VS Ground Truth)
+    for idx in range(len(test_data)):
+        # pdb.set_trace()
+        viz_seg(test_data[idx].cpu(), test_label[idx].cpu(), "{}/cls/gt_{}_{}.gif".format(args.output_dir, args.exp_name, idx), args.device)
+        viz_seg(test_data[idx].cpu(), pred_label[idx].cpu(), "{}/cls/pred_{}_{}.gif".format(args.output_dir, args.exp_name, idx), args.device)
+
 

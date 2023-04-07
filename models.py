@@ -73,9 +73,9 @@ class cls_model(nn.Module):
 
         scores = self.mlp3_3(scores)
         # points = self.relu(self.bn3_3(points))
-        points = self.relu(points)
+        # points = self.relu(points)
         
-        scores = F.softmax(scores, dim =-1)
+        # scores = F.softmax(scores, dim =-1)
         # pred_probs, pred_labels =  torch.max(scores, dim=-1)
 
         return scores
@@ -190,8 +190,8 @@ class seg_model(nn.Module):
         seg_feat = self.conv4_2(seg_feat)
         # combined_feats = 
 
-        seg_feat = seg_feat.transpose(1,2)
-        scores = F.softmax(seg_feat, dim =-1)
+        scores = seg_feat.transpose(1,2)
+        # scores = F.softmax(scores, dim =-1)
 
         return scores
 

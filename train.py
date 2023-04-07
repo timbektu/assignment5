@@ -6,6 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from models import cls_model, seg_model
 from dgcnn_model import DGCNN
+from pplus_model import PointNetPP
 from data_loader import get_data_loader
 from utils import save_checkpoint, create_dir
 import pdb
@@ -116,6 +117,9 @@ def main(args):
     elif args.task =="cls_dgcnn":
         print("Using DGCNN")
         model = DGCNN().to(args.device)
+    elif args.task =="cls_pplus":
+        print("Using PPLUS")
+        model = PointNetPP().to(args.device)
     elif args.task =="seg":
         model = seg_model().to(args.device)
     else:
@@ -178,8 +182,8 @@ def create_parser():
     parser.add_argument('--num_seg_class', type=int, default=6, help='The number of segmentation classes')
 
     # Training hyper-parameters
-    parser.add_argument('--num_epochs', type=int, default=5)
-    parser.add_argument('--batch_size', type=int, default=8, help='The number of images in a batch.')
+    parser.add_argument('--num_epochs', type=int, default=40)
+    parser.add_argument('--batch_size', type=int, default=32, help='The number of images in a batch.')
     parser.add_argument('--num_workers', type=int, default=8, help='The number of threads to use for the DataLoader.')
     # parser.add_argument('--lr', type=float, default=0.001, help='The learning rate (default 0.001)')
     parser.add_argument('--lr', type=float, default=1e-5, help='The learning rate (default 0.001)')

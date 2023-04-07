@@ -17,8 +17,8 @@ class CustomDataSet(Dataset):
             data_path = self.main_dir + self.task + "/data_test.npy"
             label_path = self.main_dir + self.task + "/label_test.npy"
         
-        self.data = torch.from_numpy(np.load(data_path))[:,:8000,:]
-        # self.data = torch.from_numpy(np.load(data_path))
+        # self.data = torch.from_numpy(np.load(data_path))[:,:8000,:]
+        self.data = torch.from_numpy(np.load(data_path))
         self.label = torch.from_numpy(np.load(label_path)).to(torch.long) # in cls task, (N,), in seg task, (N, 10000), N is the number of objects
         
 
